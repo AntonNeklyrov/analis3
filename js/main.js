@@ -141,7 +141,143 @@ const calculat = () => {
   let reachabilityMatrix = getReachabilityMatrix(matrSmej);
   let sizeTopologiesArray = 0;
 
-  console.log(reachabilityMatrix);
+  for (let i = 0; i < matrSmej.length; i++) {
+    notUsedV.push(i);
+  }
+
+  while (notUsedV.length !== 0) {
+    let achievable = [];  //достяжимые R
+    let contrAchievable = []; //контрдостяжимые Q
+
+    for (let i = 0; i < reachabilityMatrix.length; i++) {
+      for (let j = 0; j < notUsedV.length; j++) {
+        if (i === notUsedV[j]) {
+          if (reachabilityMatrix[notUsedV[0]][i] === 1) {
+            achievable.push(i);
+          }
+          if (reachabilityMatrix[i][notUsedV[0]] === 1) {
+            contrAchievable.push(i);
+          }
+        }
+      }
+    }
+
+
+    let intersection = achievable.filter(value => contrAchievable.includes(value));
+    topologiesArray[sizeTopologiesArray] = [];
+
+    if (intersection.length !== 0) {
+
+
+      topologiesArray[sizeTopologiesArray] = [];
+
+      for(let i = 0; i < intersection.length; i++){
+        topologiesArray[sizeTopologiesArray][i] = intersection[i];
+      }
+
+      for (let i = 0; i < intersection.length; i++) {
+        let number = notUsedV.indexOf(intersection[i]);
+        notUsedV.splice(number, 1);
+      }
+
+    } else {
+      topologiesArray[sizeTopologiesArray][0] = notUsedV[0];
+      notUsedV.splice(0, 1);
+    }
+
+    sizeTopologiesArray++;
+
+  }
+
+  let str1 = 'Топологическая декомпозиция' + '<br>';
+
+  for (let i = 0; i < topologiesArray.length; i++) {
+
+    str1 += 'Сильный связанный подграф (' + (i + 1) + ')={';
+    for (let j = 0; j < topologiesArray[i].length; j++) {
+      if (j !== topologiesArray[i].length - 1) {
+        str1 += (topologiesArray[i][j] + 1)  + ',';
+      } else
+
+        str1 += (topologiesArray[i][j] + 1);
+
+    }
+
+    str1 += '}' + '<br>';
+  }
+
+  str1 += '<br>';
+  document.writeln(str1);
+
+  console.log(topologiesArray);
+  let incMatrix = getTopologiesRightInc(matrSmej, topologiesArray);
+
+  let rightInc = new Array(incMatrix.length);
+
+  for(let i = 0 ; i < incMatrix.length; i++ ){
+    rightInc[i] = [];
+    for (let j = 0; j < incMatrix.length; j++) {
+      if(incMatrix[i][j] === 1){
+        rightInc[i].push(j);
+      }
+    }
+  }
+
+  showRightIncidentMatrix(rightInc);
+
+}
+
+$calculation.addEventListener('click', calculat);
+
+
+//взять матрицу достяимости
+function getReachabilityMatrix(matrSmej) {
+  let reachabilityMatrix = new Array(matrSmej.length);
+  for (let i = 0; i < matrSmej.length; i++) {
+    reachabilityMatrix[i] = new Array(matrSmej.length);
+  }
+
+  for (let i = 0; i < matrSmej.length; i++) {
+    for (let j = 0; j < matrSmej.length; j++) {
+      reachabilityMatrix[i][j] = matrSmej[i][j]
+    }
+  }
+
+  for (let k = 0; k < matrSmej.length; k++) {
+    for (let i = 0; i < matrSmej.length; i++) {
+      for (let j = 0; j < matrSmej.length; j++) {
+        if (reachabilityMatrix[i][j] === 0) {
+          if (reachabilityMatrix[k][j] === 1 && reachabilityMatrix[i][k] === 1) {
+            reachabilityMatrix[i][j] = 1;
+          }
+        }
+      }
+    }
+  }
+  return reachabilityMatrix;
+}
+
+
+function test() {
+
+  let matrSmej = [
+    [0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+  ];
+
+
+  let notUsedV = [];
+  let topologiesArray = [];
+  let reachabilityMatrix = getReachabilityMatrix(matrSmej);
+  let sizeTopologiesArray = 0;
 
   for (let i = 0; i < matrSmej.length; i++) {
     notUsedV.push(i);
@@ -163,13 +299,19 @@ const calculat = () => {
         }
       }
     }
+
+
     let intersection = achievable.filter(value => contrAchievable.includes(value));
     topologiesArray[sizeTopologiesArray] = [];
 
     if (intersection.length !== 0) {
 
-      topologiesArray[sizeTopologiesArray].push(intersection);
-      console.log(intersection);
+
+      topologiesArray[sizeTopologiesArray] = [];
+
+      for(let i = 0; i < intersection.length; i++){
+        topologiesArray[sizeTopologiesArray][i] = intersection[i];
+      }
 
       for (let i = 0; i < intersection.length; i++) {
         let number = notUsedV.indexOf(intersection[i]);
@@ -177,58 +319,86 @@ const calculat = () => {
       }
 
     } else {
-      topologiesArray[sizeTopologiesArray].push(notUsedV[0]);
+      topologiesArray[sizeTopologiesArray][0] = notUsedV[0];
       notUsedV.splice(0, 1);
     }
 
     sizeTopologiesArray++;
-  }
 
+  }
 
   let str1 = 'Топологическая декомпозиция' + '<br>';
 
   for (let i = 0; i < topologiesArray.length; i++) {
 
-    str1 += 'Сильный связанный подграф (' + (i+1) + ')={';
+    str1 += 'Сильный связанный подграф (' + (i + 1) + ')={';
     for (let j = 0; j < topologiesArray[i].length; j++) {
       if (j !== topologiesArray[i].length - 1) {
-        str1 += (topologiesArray[i][j] + 1) + ',';
-      } else str1 += (topologiesArray[i][j]);
+        str1 += (topologiesArray[i][j] + 1)  + ',';
+      } else
+
+        str1 += (topologiesArray[i][j] + 1);
+
     }
 
     str1 += '}' + '<br>';
   }
 
+
+
   str1 += '<br>';
   document.writeln(str1);
 
+  console.log(topologiesArray);
+  let incMatrix = getTopologiesRightInc(matrSmej, topologiesArray);
+
+  let rightInc = new Array(incMatrix.length);
+
+  for(let i = 0 ; i < incMatrix.length; i++ ){
+    rightInc[i] = [];
+    for (let j = 0; j < incMatrix.length; j++) {
+      if(incMatrix[i][j] === 1){
+        rightInc[i].push(j);
+      }
+    }
+  }
+
+  console.log(rightInc);
+  showRightIncidentMatrix(rightInc);
 }
 
+function getTopologiesRightInc(matrSmej, topologiesArray) {
+  let newArrayV = new Array(topologiesArray.length);
+  for (let i = 0; i < topologiesArray.length; i++) {
+    newArrayV[i] = new Array(topologiesArray.length);
+  }
 
-$calculation.addEventListener('click', calculat);
+  for (let i = 0; i < topologiesArray.length; i++) {
+    for (let j = 0; j < topologiesArray.length; j++) {
+      newArrayV[i][j] = 0;
+    }
+  }
 
-
-//взять матрицу достяимости
-function getReachabilityMatrix(array) {
-  let reachabilityMatrix = array;
-  for (let k = 0; k < array.length; k++) {
-    for (let i = 0; i < array.length; i++) {
-      for (let j = 0; j < array.length; j++) {
-        if (array[i][j] === 0) {
-          if (array[k][j] === 1 && array[i][k] === 1) {
-            array[i][j] = 1;
+  for (let i = 0; i < topologiesArray.length; i++) {
+    for (let j = 0; j < topologiesArray[i].length; j++) {
+      for (let k = 0; k < topologiesArray.length; k++) {
+        for (let n = 0; n < topologiesArray[k].length; n++) {
+          if (matrSmej[topologiesArray[i][j]][topologiesArray[k][n]] === 1 && i !== k) {
+            newArrayV[i][k] = 1;
+            break;
           }
         }
       }
     }
   }
-  return reachabilityMatrix;
+
+  return newArrayV;
 }
 
 
 //показать множиство левых инциденций
 function showLeftIncidentMatrix(leftInc) {
-  let str = 'Множество левых инциденций' + '<br>';
+  let str = 'Множество правых инциденций' + '<br>';
 
   for (let i = 0; i < leftInc.length; i++) {
 
@@ -273,132 +443,5 @@ function showRightIncidentMatrix(rightInc) {
   }
   document.writeln(str);
 }
-
-function  test(){
-
-  let matrSmej = [
-    [0,1,0,0,1,1,0,0,0,0],
-    [1,0,0,0,0,0,0,0,0,0],
-    [0,1,0,1,1,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,1,0],
-    [1,0,0,0,0,0,1,0,0,0],
-    [0,0,0,0,1,0,0,1,0,1],
-    [0,0,0,1,0,0,0,0,0,0],
-    [0,0,0,0,0,0,1,0,0,1],
-    [0,0,0,0,0,0,1,0,0,0],
-    [0,0,0,0,0,0,0,1,0,0]
-  ];
-
-
-  let notUsedV = [];
-  let topologiesArray = [];
-  let reachabilityMatrix = getReachabilityMatrix(matrSmej);
-  let sizeTopologiesArray = 0;
-
-  console.log(reachabilityMatrix);
-
-  for (let i = 0; i < matrSmej.length; i++) {
-    notUsedV.push(i);
-  }
-
-  while (notUsedV.length !== 0) {
-    let achievable = [];  //достяжимые R
-    let contrAchievable = []; //контрдостяжимые Q
-
-    for (let i = 0; i < reachabilityMatrix.length; i++) {
-      for(let j = 0; j < notUsedV.length; j++){
-        if(i === notUsedV[j]){
-          if (reachabilityMatrix[notUsedV[0]][i] === 1) {
-            achievable.push(i);
-          }
-          if (reachabilityMatrix[i][notUsedV[0]] === 1) {
-            contrAchievable.push(i);
-          }
-        }
-      }
-    }
-
-
-    let intersection = achievable.filter(value => contrAchievable.includes(value));
-    topologiesArray[sizeTopologiesArray] = [];
-
-    if (intersection.length !== 0) {
-
-      topologiesArray[sizeTopologiesArray].push(intersection);
-
-      for (let i = 0; i < intersection.length; i++) {
-        let number = notUsedV.indexOf(intersection[i]);
-        notUsedV.splice(number, 1);
-      }
-
-    } else {
-      topologiesArray[sizeTopologiesArray].push(notUsedV[0]);
-      notUsedV.splice(0, 1);
-    }
-
-    sizeTopologiesArray++;
-
-  }
-
-  let str1 = 'Топологическая декомпозиция' + '<br>';
-
-  for (let i = 0; i < topologiesArray.length; i++) {
-
-    str1 += 'Сильный связанный подграф (' + (i+1) + ')={';
-    for (let j = 0; j < topologiesArray[i].length; j++) {
-      if (j !== topologiesArray[i].length - 1) {
-        str1 += (topologiesArray[i][j] + 1) + ',';
-      } else str1 += (topologiesArray[i][j] + 1);
-    }
-
-    str1 += '}' + '<br>';
-  }
-
-  str1 += '<br>';
-  document.writeln(str1);
-
-
-  let incMatrix = getTopologiesRightInc(matrSmej,topologiesArray);
-  console.log(incMatrix);
-
-}
-
-function getTopologiesRightInc(matrSmej, topologiesArray) {
-  let newArrayV = new Array(topologiesArray.length);
-  for(let i = 0; i < topologiesArray.length; i++){
-    newArrayV[i] = new Array(topologiesArray.length);
-  }
-
-  for (let i = 0; i < topologiesArray.length ; i++) {
-    for (let j = 0; j < topologiesArray.length; j++) {
-      newArrayV[i][j] = 0;
-    }
-  }
-
-  let flag ;
-
-  for (let i = 0; i < topologiesArray.length; i++) {
-    for (let j = 0; j < topologiesArray[i].length; j++) {
-      for(let k = 0; k < topologiesArray.length; k++){
-        flag = 0;
-        for(let n = 0; n < topologiesArray[k].length; n++){
-          if (matrSmej[topologiesArray[i][j]][topologiesArray[i][j]] === 1 && i !== k) {
-            newArrayV[i][k] = 1;
-            flag = 1;
-            break;
-          }
-        }
-        if(flag === 1){
-          break;
-        }
-      }
-    }
-  }
-
-  return newArrayV;
-}
-
-
-
 
 
